@@ -75,7 +75,7 @@
     "linuxConfiguration": {
       "disablePasswordAuthentication": false,
     },
-    "networkSecurityGroupName": "default-NSG"
+    "networkSecurityGroupName": "FTC-NSG"
   },
   "resources": [
     {
