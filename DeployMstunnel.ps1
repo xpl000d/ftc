@@ -15,7 +15,8 @@ if(-not($sub))
 #Select-AzSubscription -SubscriptionId "SUBSCRIPTIONID"
 
 #Create Azure Resource Group for MSTunnel 
-New-AzResourceGroup -Name FTCmstunnel -Location "North Europe"
+$resourceGroupName = Read-Host -Prompt "Enter the Resource Group name"
+$location = Read-Host -Prompt "Enter the location (i.e. centralus)"
 
 
 New-AzResourceGroup -Name $resourceGroupName -Location "$location"
