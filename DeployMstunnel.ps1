@@ -15,9 +15,8 @@ if(-not($sub))
 #Select-AzSubscription -SubscriptionId "SUBSCRIPTIONID"
 
 #Create Azure Resource Group for MSTunnel 
-$resourceGroupName = Read-Host -Prompt "Enter the Resource Group name"
-$location = Read-Host -Prompt "Enter the location (i.e. centralus)"
-
+$resourceGroupName = FTCMStunnel
+$location = NorthEurope
 
 New-AzResourceGroup -Name $resourceGroupName -Location "$location"
 New-AzResourceGroupDeployment -ResourceGroupName $resourceGroupName -TemplateUri "https://raw.githubusercontent.com/xpl000d/ftc/main/Ubuntu_dock.json"
