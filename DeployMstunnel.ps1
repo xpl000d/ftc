@@ -1,7 +1,3 @@
-##Install Azure module 
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-Install-Module -Name Az -Scope CurrentUser -Repository PSGallery -Force
-
 
 #Deploy Linux VM - Ubuntu 18.08 with Docker CE for Mstunnel deployment
 # Sign in to your Azure subscription
