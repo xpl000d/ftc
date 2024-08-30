@@ -1,0 +1,106 @@
+# Define the variables for your enviroment. The first one is the link to your SharePoint Admin Portal. The second one is your administrator account User Principal Name
+ 
+$SPAdminLink = "https://yourtenant-admin.sharepoint.com"
+$AdminUPN = "youradminUPN@contoso.com"
+ 
+# Connect to SPO. Replace the link with your SharePoint Admin portal
+ 
+Connect-SPOService -Url $SPAdminLink
+ 
+# Enable AIP Integration
+ 
+Set-SPOTenant -EnableAIPIntegration $true
+(Get-SPOTenant).EnableAIPIntegration
+ 
+# Enable support for PDFs. Update SP Online Module if this fails. The link is https://www.microsoft.com/en-us/download/details.aspx?id=35588
+ 
+Set-SPOTenant -EnableSensitivityLabelforPDF $true
+(Get-SPOTenant).EnableSensitivityLabelforPDF
+
+#Install the Microsoft Graph cmdlets. Source: https://learn.microsoft.com/en-us/entra/identity/users/groups-settings-cmdlets#install-powershell-cmdlets
+
+Install-Module Microsoft.Graph -Scope AllUsers
+
+#Install the Microsoft Graph beta cmdlets. Source: https://learn.microsoft.com/en-us/entra/identity/users/groups-settings-cmdlets#install-powershell-cmdlets
+
+Install-Module Microsoft.Graph.Beta -Scope AllUsers
+
+Connect-MgGraph -scopes "Directory.ReadWrite.All"
+
+#Create settings at the directory level. Source: https://learn.microsoft.com/en-us/entra/identity/users/groups-settings-cmdlets#create-settings-at-the-directory-level
+
+Get-MgBetaDirectorySettingTemplate 
+
+#Add usage guideline URL 
+
+$TemplateId = (Get-MgBetaDirectorySettingTemplate | where { $_.DisplayName -eq "Group.Unified" }).Id
+$Template = Get-MgBetaDirectorySettingTemplate | where -Property Id -Value $TemplateId -EQ
+
+#Create object that contains values to be used for the directory setting 
+
+$params = @{
+   templateId = "$TemplateId"
+   values = @(
+      @{
+         name = "UsageGuidelinesUrl"
+         value = "https://guideline.example.com"
+      }
+      @{
+         name = "EnableMIPLabels"
+         value = "True"
+      }
+   )
+}
+
+#Create the directory setting 
+
+New-MgBetaDirectorySetting -BodyParameter $params
+
+#Read the value of the directory setting 
+
+$Setting = Get-MgBetaDirectorySetting | where { $_.DisplayName -eq "Group.Unified"}
+$Setting.Values
+
+
+ 
+# Connect to AAD and enable support for labels in groups. Source: https://learn.microsoft.com/en-us/microsoft-365/compliance/sensitivity-labels-teams-groups-sites?view=o365-worldwide
+ 
+Install-Module AzureADPreview
+AzureADPreview\Connect-AzureAD
+ 
+$grpUnifiedSetting = (Get-AzureADDirectorySetting | where -Property DisplayName -Value "Group.Unified" -EQ)
+$Setting = $grpUnifiedSetting
+$grpUnifiedSetting.Values
+
+#Use the following cmdlet to select the “Group.Unified” settings template.
+
+
+$TemplateId = (Get-AzureADDirectorySettingTemplate | where { $_.DisplayName -eq “Group.Unified” }).Id
+$Template = Get-AzureADDirectorySettingTemplate | where -Property Id -Value $TemplateId -EQ
+
+#Use the following cmdlet to create a new settings object.
+
+$Setting = $Template.CreateDirectorySetting()
+
+#Use the following cmdlet to enable the feature.
+
+$Setting[“EnableMIPLabels”] = “True”
+
+#Use the following cmdlet if the group settings were not created previously and you want to save the changes.
+
+New-AzureADDirectorySetting -DirectorySetting $Setting
+
+#Use the following cmdlet to verify if the feature has been enabled, the EnableMIPLabels value must be set to True.
+
+$Setting.Values
+                                                                                                                                                                 
+ 
+# Save 
+ 
+Set-AzureADDirectorySetting -Id $grpUnifiedSetting.Id -DirectorySetting $Setting
+ 
+# Now we'll import ExchangeOnlineManagement and then connect the Compliance Powershell to sync the labels
+ 
+Import-Module ExchangeOnlineManagement
+Connect-IPPSSession -UserPrincipalName $AdminUPN
+Execute-AzureAdLabelSync
